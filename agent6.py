@@ -32,9 +32,9 @@ def get_closest_cell(curr_cell,listOfCoordinates) :
 
 
 
-def get_max_probcell(curr_cell,success_finding_matrix):
-    maxval=np.max(success_finding_matrix)
-    locations=np.where(success_finding_matrix==maxval)
+def get_max_probcell(curr_cell,belief_matrix):
+    maxval=np.max(belief_matrix)
+    locations=np.where(belief_matrix==maxval)
     listOfCoordinates= list(zip(locations[0], locations[1]))
     if len(listOfCoordinates)>1:
         closest_cell_list=get_closest_cell(curr_cell,listOfCoordinates)
@@ -49,39 +49,31 @@ def current_target_not_reachable(target,current,a67obj,knowledge_grid,count):
     a67obj.belief_matrix[target[0]][target[1]]=0
     belief_sum = np.sum(a67obj.belief_matrix)
     a67obj.belief_matrix = a67obj.belief_matrix/belief_sum
-    a67obj.success_finding_matrix[target[0]][target[1]]=0
-    conf_sum = np.sum(a67obj.success_finding_matrix)
-    a67obj.success_finding_matrix = a67obj.success_finding_matrix/conf_sum
-    next_target_cell=get_max_probcell(current,a67obj.success_finding_matrix)
-    path,knowledge_grid=agent2.main(a67obj.dim,"No",a67obj.original_grid,knowledge_grid,current,next_target_cell)
+    next_target_cell=get_max_probcell(current,a67obj.belief_matrix)
     count+=1
+    path,knowledge_grid=agent2.main(a67obj.dim,"No",a67obj.original_grid,knowledge_grid,current,next_target_cell)
     return path,next_target_cell,count
 
-def main_a7(a67obj):
-    #check if the grid is solvable
-    knowledge_grid = [[1 for _ in range(a67obj.dim)] for _ in range(a67obj.dim)]
-    #while loop
-    curr_cell=a67obj.start_cell
-    examination=0
-    movements=0
+def main_a6(a67obj):
     count=0
+    movements=0
+    examinations=0
+    knowledge_grid = [[1 for _ in range(a67obj.dim)] for _ in range(a67obj.dim)]
+    curr_cell=a67obj.start_cell
     while True:
-        examination+=1
+        examinations+=1
         if examine_current_cell(curr_cell,a67obj):
-            print("Total number of actions for agent 7 are ",movements+examination)
-            print("Repeated A* for agent 7 is called ",count, "times")
+            print("Total number of actions for agent 6 are ",movements+examinations)
+            print("Repeated A* for agent 6 is called ",count, "times")
             print("Found Target!! EXITING GAME!!")
             return
         else:
             a67obj.belief_matrix[curr_cell[0]][curr_cell[1]]*= get_fnr(a67obj,curr_cell)
             belief_sum = np.sum(a67obj.belief_matrix)
             a67obj.belief_matrix = a67obj.belief_matrix/belief_sum
-            a67obj.success_finding_matrix[curr_cell[0]][curr_cell[1]]=a67obj.belief_matrix[curr_cell[0]][curr_cell[1]]*(1-get_fnr(a67obj,curr_cell))
-            conf_sum = np.sum(a67obj.success_finding_matrix)
-            a67obj.success_finding_matrix = a67obj.success_finding_matrix/conf_sum
         
 
-        next_target_cell=get_max_probcell(curr_cell,a67obj.success_finding_matrix)
+        next_target_cell=get_max_probcell(curr_cell,a67obj.belief_matrix)
         # print("My next target cell is ",next_target_cell)
         # print("curr_cell",curr_cell)
         count+=1
@@ -100,12 +92,9 @@ def main_a7(a67obj):
                     a67obj.belief_matrix[i[0]][i[1]]=0
                     belief_sum = np.sum(a67obj.belief_matrix)
                     a67obj.belief_matrix = a67obj.belief_matrix/belief_sum
-                    a67obj.success_finding_matrix[i[0]][i[1]]=0
-                    conf_sum = np.sum(a67obj.success_finding_matrix)
-                    a67obj.success_finding_matrix = a67obj.success_finding_matrix/conf_sum
                     flag=1
                     new_start_position = path[path.index(i)+1][0], path[path.index(i)+1][1]
-                    next_target_cell=get_max_probcell(new_start_position,a67obj.success_finding_matrix)
+                    next_target_cell=get_max_probcell(new_start_position,a67obj.belief_matrix)
                     # print("My new pos after bumpong to a blocked cell ",new_start_position)
                     break
                 elif (i[0],i[1])==next_target_cell:
@@ -115,6 +104,7 @@ def main_a7(a67obj):
                 #replanning
                 # print("new start pos", new_start_position)
                 # print("End targer for now", next_target_cell)
+                count+=1
                 path,knowledge_grid=agent2.main(a67obj.dim,"No",a67obj.original_grid,knowledge_grid,new_start_position,next_target_cell)
                 # print("path",path)
                 #cant reach my tagerget cell
@@ -133,3 +123,4 @@ def main_a7(a67obj):
 
 
 
+# main_a6()

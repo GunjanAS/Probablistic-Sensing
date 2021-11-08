@@ -32,7 +32,7 @@ class agent6and7():
                     self.original_grid[i][j] = 0 #blocked
         
                     
-        self.print_original_grid()
+        # self.print_original_grid()
         
     def set_start_and_target_cell(self):
         x=0
@@ -55,7 +55,7 @@ class agent6and7():
                 print(e, end=" ")
             print()
 
-dim=4
+dim=101
 
 while True:
     a67obj=agent6and7(dim)
@@ -75,6 +75,6 @@ start_a7 = time.time()
 agent7.main_a7(a67obj)
 end_a7 = time.time()
 print(f"Runtime of the agent 7 is {end_a7 - start_a7}")
-# a67obj.belief_matrix = np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
-# a67obj.success_finding_matrix=np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
-# agent8.main_a8(a67obj)
+a67obj.belief_matrix = np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
+a67obj.success_finding_matrix=np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
+agent8.main_a8(a67obj)

@@ -62,14 +62,10 @@ def get_threshold(curr_cell,success_finding_matrix):
     topkelements=[]
     # Convert it into a 1D array
     a_1d = success_finding_matrix.flatten()
-
     # Find the indices in the 1D array
     idx_1d = a_1d.argsort()[-k:]
-
     # convert the idx_1d back into indices arrays for each dimension
     x_idx, y_idx = np.unravel_index(idx_1d, success_finding_matrix.shape)
-
-    # Check that we got the largest values.
     for x, y, in zip(x_idx, y_idx):
         if success_finding_matrix[x][y]!=0:
             topkelements.append(success_finding_matrix[x][y])
@@ -87,9 +83,10 @@ def main_a8(a67obj):
         examination+=1
         if examine_current_cell(curr_cell,a67obj):
             print("Total number of actions for agent 8 are ",movements+examination)
-            print("Repeated A* for agent 8 is called ",count, "times")
-            print("Found Target!! EXITING GAME!!")
-            return
+            # print("Repeated A* for agent 8 is called ",count, "times")
+            # print("Found Target!! EXITING GAME!!")
+            actions=movements+examination
+            return movements,examination,actions
         else:
             
             a67obj.belief_matrix[curr_cell[0]][curr_cell[1]]*= get_fnr(a67obj,curr_cell)
@@ -99,7 +96,7 @@ def main_a8(a67obj):
             conf_sum = np.sum(a67obj.success_finding_matrix)
             a67obj.success_finding_matrix = a67obj.success_finding_matrix/conf_sum
             
-        next_target_cell=get_max_probcell(curr_cell,a67obj.belief_matrix)
+        next_target_cell=get_max_probcell(curr_cell,a67obj.success_finding_matrix)
         #find threshold
         threshold=get_threshold(curr_cell,a67obj.success_finding_matrix)
         # print("My next target cell is ",next_target_cell)
@@ -136,7 +133,10 @@ def main_a8(a67obj):
                     flag=2
                     break
                 elif (a67obj.original_grid[i[0]][i[1]] != 0):
-                    if(a67obj.belief_matrix[i[0]][i[1]]>= threshold):
+                    a67obj.success_finding_matrix[i[0]][i[1]]=a67obj.belief_matrix[i[0]][i[1]]*(1-get_fnr(a67obj,(i[0],i[1])))
+                    conf_sum = np.sum(a67obj.success_finding_matrix)
+                    a67obj.success_finding_matrix = a67obj.success_finding_matrix/conf_sum
+                    if(a67obj.success_finding_matrix[i[0]][i[1]]>= threshold):
                         next_target_cell=(i[0],i[1])
                         flag=2
                         break

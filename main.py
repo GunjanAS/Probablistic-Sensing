@@ -1,5 +1,7 @@
 import agent6,agent7,agent8,random,astar,time
 import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
 
 
 class agent6and7():
@@ -47,6 +49,12 @@ class agent6and7():
             target_xCoord = random.randrange(self.dim) 
             y=self.original_grid[target_xCoord][target_yCoord]
         target_cell=(target_xCoord,target_yCoord)
+        
+
+
+
+        
+
         return start_cell,target_cell
                 
     def print_original_grid(self):
@@ -54,27 +62,260 @@ class agent6and7():
             for e in row:
                 print(e, end=" ")
             print()
-
 dim=101
+loop=20
+final_result=np.zeros((20,6))
+while loop>0:
+    while True:
+        a67obj=agent6and7(dim)
+        result,path=astar.main(a67obj.original_grid,a67obj.dim,a67obj.start_cell,a67obj.target_cell)
+        if result=="Solvable":
+            break
+    target_terrain_type=a67obj.terrain_type_dict[a67obj.original_grid[a67obj.target_cell[0]][a67obj.target_cell[1]]]
 
-while True:
-    a67obj=agent6and7(dim)
-    result,path=astar.main(a67obj.original_grid,a67obj.dim,a67obj.start_cell,a67obj.target_cell)
-    if result=="Solvable":
-        break
-target_terrain_type=a67obj.terrain_type_dict[a67obj.original_grid[a67obj.target_cell[0]][a67obj.target_cell[1]]]
-print("Target terrain type is ",target_terrain_type)
-start_a6 = time.time()
-agent6.main_a6(a67obj)
-end_a6= time.time()
-print(f"Runtime of the agent 6 is {end_a6 - start_a6}")
-##Resetiing belief mtarix which was updated while running agent 6
-a67obj.belief_matrix = np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
-a67obj.success_finding_matrix=np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
-start_a7 = time.time()
-agent7.main_a7(a67obj)
-end_a7 = time.time()
-print(f"Runtime of the agent 7 is {end_a7 - start_a7}")
-a67obj.belief_matrix = np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
-a67obj.success_finding_matrix=np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
-agent8.main_a8(a67obj)
+
+    print("Target terrain type is ",target_terrain_type)
+    start_a6 = time.time()
+    movements6,examinations6,actions6=agent6.main_a6(a67obj)
+    end_a6= time.time()
+    # print(f"Runtime of the agent 6 is {end_a6 - start_a6}")
+    ##Resetiing belief mtarix which was updated while running agent 6
+    a67obj.belief_matrix = np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
+    a67obj.success_finding_matrix=np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
+    start_a7 = time.time()
+    movements7,examinations7,actions7=agent7.main_a7(a67obj)
+    end_a7 = time.time()
+    # print(f"Runtime of the agent 7 is {end_a7 - start_a7}")
+    a67obj.belief_matrix = np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
+    a67obj.success_finding_matrix=np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
+    start_a8 = time.time()
+    movements8,examinations8,actions8=agent8.main_a8(a67obj)
+    end_a8 = time.time()
+    if actions6>actions7 and actions7>actions8 and actions6>actions8:
+        final_result=np.append(final_result,[["Agent 6",target_terrain_type,int(movements6),int(examinations6),int(actions6), int(end_a6 - start_a6) ]],axis=0)
+        final_result=np.append(final_result,[["Agent 7",target_terrain_type,int(movements7),int(examinations7),int(actions7),int(end_a6 - start_a6) ]],axis=0)
+        final_result=np.append(final_result,[["Agent 8",target_terrain_type,int(movements8),int(examinations8),int(actions8),int(end_a6 - start_a6) ]],axis=0)
+        loop-=1
+    elif actions7>actions6 and actions7>actions8 and actions6>actions8:
+        final_result=np.append(final_result,[["Agent 6",target_terrain_type,int(movements7),int(examinations7),int(actions7), int(end_a6 - start_a6) ]],axis=0)
+        final_result=np.append(final_result,[["Agent 7",target_terrain_type,int(movements6),int(examinations6),int(actions6),int(end_a6 - start_a6) ]],axis=0)
+        final_result=np.append(final_result,[["Agent 8",target_terrain_type,int(movements8),int(examinations8),int(actions8),int(end_a6 - start_a6) ]],axis=0)
+        loop-=1
+
+df = pd.DataFrame(final_result, 
+             columns=['Agent Type', 'Terrain Type', 'Movements', 'Examinations', 'Actions','Time Taken'])
+df_actions_a6=df.loc[df['Agent Type'] == "Agent 6"]
+mean_a6_actions=df_actions_a6['Actions'].astype(int).mean()
+df_actions_a7=df.loc[df['Agent Type'] == "Agent 7"]
+mean_a7_actions=df_actions_a7['Actions'].astype(int).mean()
+df_actions_a8=df.loc[df['Agent Type'] == "Agent 8"]
+mean_a8_actions=df_actions_a8['Actions'].astype(int).mean()
+fig = plt.figure()
+xaxis=["Agent 6", "Agent 7"]
+yaxis=[mean_a6_actions,mean_a7_actions]
+plt.bar(xaxis, yaxis)
+plt.xlabel("Agents")
+plt.ylabel("No. of actions")
+plt.title("Actions for Agent 6 and 7")
+# plt.show()
+plt.savefig("graphs/Agent6-7/Actions67.png")
+fig = plt.figure()
+xaxis=["Agent 6", "Agent 7","Agent 8"]
+yaxis=[mean_a6_actions,mean_a7_actions,mean_a8_actions]
+plt.bar(xaxis, yaxis)
+plt.xlabel("Agents")
+plt.ylabel("No. of actions")
+plt.title("Actions for Agent 6 , 7 and 8")
+# plt.show()
+plt.savefig("graphs/Agent6-7-8/Actions678.png")
+# df_actions_a6=df.loc[df['Agent Type'] == "Agent 6"]
+# mean_a6_actions=df_actions_a6['Actions'].astype(int).mean()
+# df_actions_a7=df.loc[df['Agent Type'] == "Agent 7"]
+# mean_a7_actions=df_actions_a7['Actions'].astype(int).mean()
+
+
+
+a6_hilly_avgactions=df.loc[(df['Agent Type'] == "Agent 6") & (df['Terrain Type'] == "Hilly")]['Actions'].astype(int).mean()
+a6_hilly_avgmovements=df.loc[(df['Agent Type'] == "Agent 6") & (df['Terrain Type'] == "Hilly")]['Movements'].astype(int).mean()
+a6_hilly_avgexaminations=df.loc[(df['Agent Type'] == "Agent 6") & (df['Terrain Type'] == "Hilly")]['Examinations'].astype(int).mean()
+
+a7_hilly_avgactions=df.loc[(df['Agent Type'] == "Agent 7") & (df['Terrain Type'] == "Hilly")]['Actions'].astype(int).mean()
+a7_hilly_avgexaminations=df.loc[(df['Agent Type'] == "Agent 7") & (df['Terrain Type'] == "Hilly")]['Examinations'].astype(int).mean()
+a7_hilly_avgmovements=df.loc[(df['Agent Type'] == "Agent 7") & (df['Terrain Type'] == "Hilly")]['Movements'].astype(int).mean()
+
+a8_hilly_avgactions=df.loc[(df['Agent Type'] == "Agent 8") & (df['Terrain Type'] == "Hilly")]['Actions'].astype(int).mean()
+a8_hilly_avgexaminations=df.loc[(df['Agent Type'] == "Agent 8") & (df['Terrain Type'] == "Hilly")]['Examinations'].astype(int).mean()
+a8_hilly_avgmovements=df.loc[(df['Agent Type'] == "Agent 8") & (df['Terrain Type'] == "Hilly")]['Movements'].astype(int).mean()
+
+a6_flat_avgactions=df.loc[(df['Agent Type'] == "Agent 6" )& (df['Terrain Type'] == "Flat")]['Actions'].astype(int).mean()
+a6_flat_avgmovements=df.loc[(df['Agent Type'] == "Agent 6" )& (df['Terrain Type'] == "Flat")]['Movements'].astype(int).mean()
+a6_flat_avgexaminations=df.loc[(df['Agent Type'] == "Agent 6" )& (df['Terrain Type'] == "Flat")]['Examinations'].astype(int).mean()
+
+a7_flat_avgactions=df.loc[(df['Agent Type'] == "Agent 7")& (df['Terrain Type'] == "Flat")]['Actions'].astype(int).mean()
+a7_flat_avgmovements=df.loc[(df['Agent Type'] == "Agent 7" )& (df['Terrain Type'] == "Flat")]['Movements'].astype(int).mean()
+a7_flat_avgexaminations=df.loc[(df['Agent Type'] == "Agent 7" )& (df['Terrain Type'] == "Flat")]['Examinations'].astype(int).mean()
+
+a8_flat_avgactions=df.loc[(df['Agent Type'] == "Agent 8")& (df['Terrain Type'] == "Flat")]['Actions'].astype(int).mean()
+a8_flat_avgmovements=df.loc[(df['Agent Type'] == "Agent 8" )& (df['Terrain Type'] == "Flat")]['Movements'].astype(int).mean()
+a8_flat_avgexaminations=df.loc[(df['Agent Type'] == "Agent 8" )& (df['Terrain Type'] == "Flat")]['Examinations'].astype(int).mean()
+
+a6_forest_avgactions=df.loc[(df['Agent Type'] == "Agent 6" )& (df['Terrain Type'] == "Forest")]['Actions'].astype(int).mean()
+a6_forest_avgmovements=df.loc[(df['Agent Type'] == "Agent 6") & (df['Terrain Type'] == "Forest")]['Movements'].astype(int).mean()
+a6_forest_avgexaminations=df.loc[(df['Agent Type'] == "Agent 6") & (df['Terrain Type'] == "Forest")]['Examinations'].astype(int).mean()
+
+a7_forest_avgactions=df.loc[(df['Agent Type'] == "Agent 7")& (df['Terrain Type'] == "Forest")]['Actions'].astype(int).mean()
+a7_forest_avgexaminations=df.loc[(df['Agent Type'] == "Agent 7") & (df['Terrain Type'] == "Forest")]['Examinations'].astype(int).mean()
+a7_forest_avgmovements=df.loc[(df['Agent Type'] == "Agent 7") & (df['Terrain Type'] == "Forest")]['Movements'].astype(int).mean()
+
+a8_forest_avgactions=df.loc[(df['Agent Type'] == "Agent 8")& (df['Terrain Type'] == "Forest")]['Actions'].astype(int).mean()
+a8_forest_avgexaminations=df.loc[(df['Agent Type'] == "Agent 8") & (df['Terrain Type'] == "Forest")]['Examinations'].astype(int).mean()
+a8_forest_avgmovements=df.loc[(df['Agent Type'] == "Agent 8") & (df['Terrain Type'] == "Forest")]['Movements'].astype(int).mean()
+
+#----------------Comparison of Agent 6 and 7---------------#
+plotdata = pd.DataFrame({
+    "Agent 6":[a6_flat_avgactions,a6_hilly_avgactions,a6_forest_avgactions],
+    "Agent 7":[a7_flat_avgactions,a7_hilly_avgactions,a7_forest_avgactions],
+    }, 
+    index=["Flat", "Hilly", "Forest"]
+)
+plotdata.plot(kind="bar")
+plt.title("Number of actions for agent 6 and 7 for different terrain types")
+plt.xlabel("Terrain Types")
+plt.ylabel("Number of actions")
+# plt.show()
+plt.savefig("graphs/Agent6-7/Actionsperterrain67.png")
+
+#Hilly
+plotdata = pd.DataFrame({
+    "Actions":[a6_hilly_avgactions,a7_hilly_avgactions],
+    "Movements":[a6_hilly_avgmovements,a7_hilly_avgmovements],
+    "Examinations":[a6_hilly_avgexaminations,a7_hilly_avgexaminations]
+    }, 
+    index=["Agent 6", "Agent 7"]
+)
+plotdata.plot(kind="bar")
+plt.title("Number of actions/movements/examinations for agent 6 and 7 for Hilly terrain types")
+plt.xlabel("Hilly Terrain Type")
+plt.ylabel("Number of actions/movements/examinations")
+# plt.show()
+plt.savefig("graphs/Agent6-7/ActionsMovesExams-Hilly-67.png")
+
+#Flat
+plotdata = pd.DataFrame({
+    "Actions":[a6_flat_avgactions,a7_flat_avgactions],
+    "Movements":[a6_flat_avgmovements,a7_flat_avgmovements],
+    "Examinations":[a6_flat_avgexaminations,a7_flat_avgexaminations]
+    }, 
+    index=["Agent 6", "Agent 7"]
+)
+plotdata.plot(kind="bar")
+plt.title("Number of actions/movements/examinations for agent 6 and 7 for flat terrain types")
+plt.xlabel("Flat Terrain Type")
+plt.ylabel("Number of actions/movements/examinations")
+# plt.show()
+plt.savefig("graphs/Agent6-7/ActionsMovesExams-Flat-67.png")
+
+#Forest
+plotdata = pd.DataFrame({
+    "Actions":[a6_forest_avgactions,a7_forest_avgactions],
+    "Movements":[a6_forest_avgmovements,a7_forest_avgmovements],
+    "Examinations":[a6_forest_avgexaminations,a7_forest_avgexaminations]
+    }, 
+    index=["Agent 6", "Agent 7"]
+)
+plotdata.plot(kind="bar")
+plt.title("Number of actions/movements/examinations for agent 6 and 7 for forest terrain types")
+plt.xlabel("Forest Terrain Type")
+plt.ylabel("Number of actions/movements/examinations")
+# plt.show()
+plt.savefig("graphs/Agent6-7/ActionsMovesExams-Forest-67.png")
+
+#time comparison
+df_timetaken_a6=df.loc[df['Agent Type'] == "Agent 6"]
+mean_a6_timetaken=df_timetaken_a6['Time Taken'].astype(int).mean()
+df_timetaken_a7=df.loc[df['Agent Type'] == "Agent 7"]
+mean_a7_timetaken=df_timetaken_a7['Time Taken'].astype(int).mean()
+fig = plt.figure()
+xaxis=["Agent 6", "Agent 7"]
+yaxis=[mean_a6_timetaken,mean_a7_timetaken]
+plt.bar(xaxis, yaxis)
+plt.xlabel("Agents")
+plt.ylabel("Time taken to execute")
+plt.title("Time taken for Agent 6 and 7 ")
+# plt.show()
+plt.savefig("graphs/Agent6-7/TimeTaken67.png")
+#----------------Comparison of Agent 6 , 7 and 8---------------#
+plotdata = pd.DataFrame({
+    "Agent 6":[a6_flat_avgactions,a6_hilly_avgactions,a6_forest_avgactions],
+    "Agent 7":[a7_flat_avgactions,a7_hilly_avgactions,a7_forest_avgactions],
+    "Agent 8":[a8_flat_avgactions,a8_hilly_avgactions,a8_forest_avgactions],
+    }, 
+    index=["Flat", "Hilly", "Forest"]
+)
+plotdata.plot(kind="bar")
+plt.title("Number of actions for agent 6 , 7 and 8 for different terrain types")
+plt.xlabel("Terrain Types")
+plt.ylabel("Number of actions")
+# plt.show()
+plt.savefig("graphs/Agent6-7-8/Actionsperterrain678.png")
+
+#Hilly
+plotdata = pd.DataFrame({
+    "Actions":[a6_hilly_avgactions,a7_hilly_avgactions,a8_hilly_avgactions],
+    "Movements":[a6_hilly_avgmovements,a7_hilly_avgmovements,a8_hilly_avgmovements],
+    "Examinations":[a6_hilly_avgexaminations,a7_hilly_avgexaminations,a8_hilly_avgexaminations]
+    }, 
+    index=["Agent 6", "Agent 7","Agent 8"]
+)
+plotdata.plot(kind="bar")
+plt.title("Number of actions/movements/examinations for agent 6 , 7 and 8 for Hilly terrain types")
+plt.xlabel("Hilly Terrain Type")
+plt.ylabel("Number of actions/movements/examinations")
+# plt.show()
+plt.savefig("graphs/Agent6-7-8/ActionsMovesExams-Hilly-678.png")
+
+#Flat
+plotdata = pd.DataFrame({
+    "Actions":[a6_flat_avgactions,a7_flat_avgactions,a8_flat_avgactions],
+    "Movements":[a6_flat_avgmovements,a7_flat_avgmovements,a8_flat_avgmovements],
+    "Examinations":[a6_flat_avgexaminations,a7_flat_avgexaminations,a8_flat_avgexaminations]
+    }, 
+    index=["Agent 6", "Agent 7","Agent 8"]
+)
+plotdata.plot(kind="bar")
+plt.title("Number of actions/movements/examinations for agent 6 , 7 and 8 for flat terrain types")
+plt.xlabel("Flat Terrain Type")
+plt.ylabel("Number of actions/movements/examinations")
+# plt.show()
+plt.savefig("graphs/Agent6-7-8/ActionsMovesExams-Flat-678.png")
+
+#Forest
+plotdata = pd.DataFrame({
+    "Actions":[a6_forest_avgactions,a7_forest_avgactions,a8_forest_avgactions],
+    "Movements":[a6_forest_avgmovements,a7_forest_avgmovements,a8_forest_avgmovements],
+    "Examinations":[a6_forest_avgexaminations,a7_forest_avgexaminations,a8_forest_avgexaminations]
+    }, 
+    index=["Agent 6", "Agent 7","Agent 8"]
+)
+plotdata.plot(kind="bar")
+plt.title("Number of actions/movements/examinations for agent 6 , 7 and 8 for forest terrain types")
+plt.xlabel("Forest Terrain Type")
+plt.ylabel("Number of actions/movements/examinations")
+# plt.show()
+plt.savefig("graphs/Agent6-7-8/ActionsMovesExams-Forest-678.png")
+
+df_timetaken_a6=df.loc[df['Agent Type'] == "Agent 6"]
+mean_a6_timetaken=df_timetaken_a6['Time Taken'].astype(int).mean()
+df_timetaken_a7=df.loc[df['Agent Type'] == "Agent 7"]
+mean_a7_timetaken=df_timetaken_a7['Time Taken'].astype(int).mean()
+df_timetaken_a8=df.loc[df['Agent Type'] == "Agent 8"]
+mean_a8_timetaken=df_timetaken_a8['Time Taken'].astype(int).mean()
+fig = plt.figure()
+xaxis=["Agent 6", "Agent 7", "Agent 8"]
+yaxis=[mean_a6_timetaken,mean_a7_timetaken,mean_a8_timetaken]
+plt.bar(xaxis, yaxis)
+plt.xlabel("Agents")
+plt.ylabel("Time taken to execute")
+plt.title("Time Taken for Agent 6 , 7 and 8")
+# plt.show()
+plt.savefig("graphs/Agent6-7-8/TimeTaken678.png")

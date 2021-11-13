@@ -64,9 +64,10 @@ def main_a6(a67obj):
         examinations+=1
         if examine_current_cell(curr_cell,a67obj):
             print("Total number of actions for agent 6 are ",movements+examinations)
-            print("Repeated A* for agent 6 is called ",count, "times")
-            print("Found Target!! EXITING GAME!!")
-            return
+            # print("Repeated A* for agent 6 is called ",count, "times")
+            # print("Found Target!! EXITING GAME!!")
+            actions=movements+examinations
+            return movements,examinations,actions
         else:
             a67obj.belief_matrix[curr_cell[0]][curr_cell[1]]*= get_fnr(a67obj,curr_cell)
             belief_sum = np.sum(a67obj.belief_matrix)

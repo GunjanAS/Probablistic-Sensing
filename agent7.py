@@ -69,9 +69,10 @@ def main_a7(a67obj):
         examination+=1
         if examine_current_cell(curr_cell,a67obj):
             print("Total number of actions for agent 7 are ",movements+examination)
-            print("Repeated A* for agent 7 is called ",count, "times")
-            print("Found Target!! EXITING GAME!!")
-            return
+            actions=movements+examination
+            # print("Repeated A* for agent 7 is called ",count, "times")
+            # print("Found Target!! EXITING GAME!!")
+            return movements,examination,actions
         else:
             a67obj.belief_matrix[curr_cell[0]][curr_cell[1]]*= get_fnr(a67obj,curr_cell)
             belief_sum = np.sum(a67obj.belief_matrix)
@@ -111,6 +112,19 @@ def main_a7(a67obj):
                 elif (i[0],i[1])==next_target_cell:
                     flag=2
                     break
+                elif a67obj.original_grid[i[0]][i[1]] != 0:
+                    a67obj.success_finding_matrix[i[0]][i[1]]=a67obj.belief_matrix[i[0]][i[1]]*(1-get_fnr(a67obj,(i[0],i[1])))
+                    conf_sum = np.sum(a67obj.success_finding_matrix)
+                    a67obj.success_finding_matrix = a67obj.success_finding_matrix/conf_sum
+                    new_start_position = path[path.index(i)][0], path[path.index(i)][1]
+                    # if get_max_probcell(curr_cell,a67obj.success_finding_matrix)!=next_target_cell:
+                    #     flag=1
+                    #     break
+                    # new_start_position = path[path.index(i)][0], path[path.index(i)][1]
+                    # flag=1
+                    # break
+
+
             if flag==1:
                 #replanning
                 # print("new start pos", new_start_position)

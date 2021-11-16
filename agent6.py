@@ -38,10 +38,8 @@ def get_max_probcell(curr_cell,belief_matrix):
     listOfCoordinates= list(zip(locations[0], locations[1]))
     if len(listOfCoordinates)>1:
         closest_cell_list=get_closest_cell(curr_cell,listOfCoordinates)
-        # print("closest_cell_list",closest_cell_list)
         if len(closest_cell_list)>1:
             return random.choice(closest_cell_list)
-        
         return closest_cell_list[0]
     return listOfCoordinates[0]
 
@@ -62,66 +60,45 @@ def main_a6(a67obj):
     curr_cell=a67obj.start_cell
     while True:
         examinations+=1
+        ##examine the current cell
         if examine_current_cell(curr_cell,a67obj):
-            print("Total number of actions for agent 6 are ",movements+examinations)
-            # print("Repeated A* for agent 6 is called ",count, "times")
-            # print("Found Target!! EXITING GAME!!")
+            print("Found Target!! EXITING GAME!!")
             actions=movements+examinations
             return movements,examinations,actions
         else:
+            ##update the belief_matrix
             a67obj.belief_matrix[curr_cell[0]][curr_cell[1]]*= get_fnr(a67obj,curr_cell)
             belief_sum = np.sum(a67obj.belief_matrix)
             a67obj.belief_matrix = a67obj.belief_matrix/belief_sum
-        
-
+        ##find maximum probability cell from belief_matrix
         next_target_cell=get_max_probcell(curr_cell,a67obj.belief_matrix)
-        # print("My next target cell is ",next_target_cell)
-        # print("curr_cell",curr_cell)
-        count+=1
+        ##get A* path from start to nect_target_goal
         path,knowledge_grid=agent2.main(a67obj.dim,"No",a67obj.original_grid,knowledge_grid,curr_cell,next_target_cell)
-        # print("my path here in 131 ", path)
+        ##re-plan if current target is not reachable
         while (len(path)==0):
             path,next_target_cell,count=current_target_not_reachable(next_target_cell,curr_cell,a67obj,knowledge_grid,count)
         while True:
             flag=0
+            ##execute the path
             for i in path[::-1]:
                 movements+=1
-                # print("I am walking on cell ",(i[0],i[1]))
-                if(a67obj.original_grid[i[0]][i[1]] == 0): #bumped into a blocked cell
+                if(a67obj.original_grid[i[0]][i[1]] == 0): #bumped into a blocked cell, update the belief matrix
                     knowledge_grid[i[0]][i[1]] = 0
-                    # print("updayes")
                     a67obj.belief_matrix[i[0]][i[1]]=0
                     belief_sum = np.sum(a67obj.belief_matrix)
                     a67obj.belief_matrix = a67obj.belief_matrix/belief_sum
                     flag=1
                     new_start_position = path[path.index(i)+1][0], path[path.index(i)+1][1]
-                    next_target_cell=get_max_probcell(new_start_position,a67obj.belief_matrix)
-                    # print("My new pos after bumpong to a blocked cell ",new_start_position)
                     break
                 elif (i[0],i[1])==next_target_cell:
+                    ##reached the next_target_cell, time to examine
                     flag=2
                     break
             if flag==1:
-                #replanning
-                # print("new start pos", new_start_position)
-                # print("End targer for now", next_target_cell)
-                count+=1
+                ##replan after bumped a blocked cell
                 path,knowledge_grid=agent2.main(a67obj.dim,"No",a67obj.original_grid,knowledge_grid,new_start_position,next_target_cell)
-                # print("path",path)
-                #cant reach my tagerget cell
                 while (len(path)==0):
                     path,next_target_cell,count=current_target_not_reachable(next_target_cell,curr_cell,a67obj,knowledge_grid,count)
-                    
             elif flag==2:
                 break
         curr_cell=next_target_cell
-        
-
-    #run A* get path and execute
-    #if one of the cell encountered is block- change probab
-
-    # print(next_target_cell)
-
-
-
-# main_a6()

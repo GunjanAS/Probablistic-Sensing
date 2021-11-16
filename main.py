@@ -5,16 +5,17 @@ import matplotlib.pyplot as plt
 
 
 class agent6and7():
-    def __init__(self,dimensions):
+    def __init__(self,dimensions,terrain):
         self.dim=dimensions
         self.generate_original_grid()
-        self.start_cell,self.target_cell=self.set_start_and_target_cell()
+        self.terrain_fnr_dict={1:0.2,2:0.5,3:0.8}
+        self.terrain_type_dict={1:"Flat",2:"Hilly",3:"Forest"}
+        self.start_cell,self.target_cell=self.set_start_and_target_cell(terrain)
         print("Start cell is" ,self.start_cell)
         print("target cell is" ,self.target_cell)
-        self.terrain_fnr_dict={1:0.8,2:0.5,3:0.2}
-        self.terrain_type_dict={1:"Flat",2:"Hilly",3:"Forest"}
         self.belief_matrix = np.full((self.dim, self.dim), 1/(self.dim**2))
         self.success_finding_matrix=np.full((self.dim, self.dim), 1/(self.dim**2))
+
 
 
     def generate_original_grid(self):
@@ -36,7 +37,7 @@ class agent6and7():
                     
         # self.print_original_grid()
         
-    def set_start_and_target_cell(self):
+    def set_start_and_target_cell(self,terrain):
         x=0
         while x==0: #loop until find an unblocked cell to set the start cell
             start_yCoord = random.randrange(self.dim)
@@ -50,8 +51,17 @@ class agent6and7():
             y=self.original_grid[target_xCoord][target_yCoord]
         target_cell=(target_xCoord,target_yCoord)
         
+        target_terrain_type=self.terrain_type_dict[self.original_grid[target_cell[0]][target_cell[1]]]
 
+        while target_terrain_type!= self.terrain_type_dict[terrain]:
+            y=0
 
+            while y==0: #loop until find an unblocked cell to set the target cell
+                target_yCoord = random.randrange(self.dim)
+                target_xCoord = random.randrange(self.dim) 
+                y=self.original_grid[target_xCoord][target_yCoord]
+            target_cell=(target_xCoord,target_yCoord)
+            target_terrain_type=self.terrain_type_dict[self.original_grid[target_cell[0]][target_cell[1]]]
 
         
 
@@ -62,45 +72,55 @@ class agent6and7():
             for e in row:
                 print(e, end=" ")
             print()
-dim=101
-loop=20
-final_result=np.zeros((20,6))
-while loop>0:
+dim=50
+loops=[3, 25]
+final_result=np.zeros((loops[0] + loops[1],6))
+
+while loops[0] > 0:
+    loops[0]-=1
+    loops[1] = 25
     while True:
-        a67obj=agent6and7(dim)
+        a67obj = agent6and7(dim, loops[0] + 1)
         result,path=astar.main(a67obj.original_grid,a67obj.dim,a67obj.start_cell,a67obj.target_cell)
         if result=="Solvable":
             break
-    target_terrain_type=a67obj.terrain_type_dict[a67obj.original_grid[a67obj.target_cell[0]][a67obj.target_cell[1]]]
+
+    while loops[1] > 0:
+        loops[1]-=1
+
+        print("Loop: ",loops)
+        
+        target_terrain_type=a67obj.terrain_type_dict[a67obj.original_grid[a67obj.target_cell[0]][a67obj.target_cell[1]]]
 
 
-    print("Target terrain type is ",target_terrain_type)
-    start_a6 = time.time()
-    movements6,examinations6,actions6=agent6.main_a6(a67obj)
-    end_a6= time.time()
-    # print(f"Runtime of the agent 6 is {end_a6 - start_a6}")
-    ##Resetiing belief mtarix which was updated while running agent 6
-    a67obj.belief_matrix = np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
-    a67obj.success_finding_matrix=np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
-    start_a7 = time.time()
-    movements7,examinations7,actions7=agent7.main_a7(a67obj)
-    end_a7 = time.time()
-    # print(f"Runtime of the agent 7 is {end_a7 - start_a7}")
-    a67obj.belief_matrix = np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
-    a67obj.success_finding_matrix=np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
-    start_a8 = time.time()
-    movements8,examinations8,actions8=agent8.main_a8(a67obj)
-    end_a8 = time.time()
-    if actions6>actions7 and actions7>actions8 and actions6>actions8:
+        print("Target terrain type is ",target_terrain_type)
+        a67obj.belief_matrix = np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
+        a67obj.success_finding_matrix=np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
+        start_a6 = time.time()
+        movements6,examinations6,actions6=agent6.main_a6(a67obj)
+        print("movements6",movements6)
+        print("examinations6",examinations6)
+        end_a6= time.time()
+        ##Resetiing matrices
+        a67obj.belief_matrix = np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
+        a67obj.success_finding_matrix=np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
+        start_a7 = time.time()
+        movements7,examinations7,actions7=agent7.main_a7(a67obj)
+        print("movement76",movements7)
+        print("examinations7",examinations7)
+        end_a7 = time.time()
+        a67obj.belief_matrix = np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
+        a67obj.success_finding_matrix=np.full((a67obj.dim, a67obj.dim), 1/(a67obj.dim**2))
+        start_a8 = time.time()
+        movements8,examinations8,actions8=agent8.main_a8(a67obj)
+        end_a8 = time.time()
+        print("movements8",movements8)
+        print("examinations8",examinations8)
         final_result=np.append(final_result,[["Agent 6",target_terrain_type,int(movements6),int(examinations6),int(actions6), int(end_a6 - start_a6) ]],axis=0)
         final_result=np.append(final_result,[["Agent 7",target_terrain_type,int(movements7),int(examinations7),int(actions7),int(end_a6 - start_a6) ]],axis=0)
         final_result=np.append(final_result,[["Agent 8",target_terrain_type,int(movements8),int(examinations8),int(actions8),int(end_a6 - start_a6) ]],axis=0)
-        loop-=1
-    elif actions7>actions6 and actions7>actions8 and actions6>actions8:
-        final_result=np.append(final_result,[["Agent 6",target_terrain_type,int(movements7),int(examinations7),int(actions7), int(end_a6 - start_a6) ]],axis=0)
-        final_result=np.append(final_result,[["Agent 7",target_terrain_type,int(movements6),int(examinations6),int(actions6),int(end_a6 - start_a6) ]],axis=0)
-        final_result=np.append(final_result,[["Agent 8",target_terrain_type,int(movements8),int(examinations8),int(actions8),int(end_a6 - start_a6) ]],axis=0)
-        loop-=1
+
+        
 
 df = pd.DataFrame(final_result, 
              columns=['Agent Type', 'Terrain Type', 'Movements', 'Examinations', 'Actions','Time Taken'])
@@ -117,7 +137,6 @@ plt.bar(xaxis, yaxis)
 plt.xlabel("Agents")
 plt.ylabel("No. of actions")
 plt.title("Actions for Agent 6 and 7")
-# plt.show()
 plt.savefig("graphs/Agent6-7/Actions67.png")
 fig = plt.figure()
 xaxis=["Agent 6", "Agent 7","Agent 8"]
@@ -126,12 +145,21 @@ plt.bar(xaxis, yaxis)
 plt.xlabel("Agents")
 plt.ylabel("No. of actions")
 plt.title("Actions for Agent 6 , 7 and 8")
-# plt.show()
 plt.savefig("graphs/Agent6-7-8/Actions678.png")
-# df_actions_a6=df.loc[df['Agent Type'] == "Agent 6"]
-# mean_a6_actions=df_actions_a6['Actions'].astype(int).mean()
-# df_actions_a7=df.loc[df['Agent Type'] == "Agent 7"]
-# mean_a7_actions=df_actions_a7['Actions'].astype(int).mean()
+
+adict = {
+    "a6": df.loc[df['Agent Type'] == "Agent 6"],
+    "a7": df.loc[df['Agent Type'] == "Agent 7"],
+    "a8": df.loc[df['Agent Type'] == "Agent 8"],
+}
+
+mean_a6_moves=adict["a6"]['Movements'].astype(int).mean()
+mean_a7_moves=adict["a7"]['Movements'].astype(int).mean()
+mean_a8_moves=adict["a8"]['Movements'].astype(int).mean()
+
+mean_a6_exams=adict["a6"]['Examinations'].astype(int).mean()
+mean_a7_exams=adict["a7"]['Examinations'].astype(int).mean()
+mean_a8_exams=adict["a8"]['Examinations'].astype(int).mean()
 
 
 
@@ -182,7 +210,6 @@ plotdata.plot(kind="bar")
 plt.title("Number of actions for agent 6 and 7 for different terrain types")
 plt.xlabel("Terrain Types")
 plt.ylabel("Number of actions")
-# plt.show()
 plt.savefig("graphs/Agent6-7/Actionsperterrain67.png")
 
 #Hilly
@@ -319,3 +346,4 @@ plt.ylabel("Time taken to execute")
 plt.title("Time Taken for Agent 6 , 7 and 8")
 # plt.show()
 plt.savefig("graphs/Agent6-7-8/TimeTaken678.png")
+
